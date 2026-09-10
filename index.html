@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuaderno IA — Preparación de exámenes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EAF3FB;
+    --paper:#FFFFFF;
+    --ink:#132A46;
+    --ink-soft:#5D7692;
+    --line:#CFE3F5;
+    --pine:#2E6FB4;
+    --pine-dark:#1F4E82;
+    --ochre:#5B9BD9;
+    --ochre-light:#DCEBFA;
+    --wrong:#C1443C;
+    --right:#2E8B6E;
+    --field-bg:#F4FAFF;
+    --radius:10px;
+    --shadow: 0 1px 2px rgba(19,42,70,.06), 0 4px 14px rgba(19,42,70,.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    font-size:15px;
+    line-height:1.5;
+    min-height:100vh;
+  }
+  h1,h2,h3,.serif{font-family:'Source Serif 4',Georgia,serif;}
+  .app{
+    max-width:1100px;
+    margin:0 auto;
+    padding:28px 20px 60px;
+  }
+  header.top{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:14px;
+    margin-bottom:22px;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  header.top h1{
+    font-size:26px;
+    font-weight:700;
+    margin:0;
+    letter-spacing:-.01em;
+  }
+  header.top .tag{
+    color:var(--ink-soft);
+    font-size:13px;
+  }
+  .layout{
+    display:grid;
+    grid-template-columns:190px 1fr;
+    gap:24px;
+  }
+  @media (max-width:760px){
+    .layout{grid-template-columns:1fr;}
+    nav.tabs{
+      display:flex;
+      overflow-x:auto;
+      gap:6px;
+      padding-bottom:6px;
+      border-bottom:1px solid var(--line);
+    }
+    nav.tabs button{white-space:nowrap;}
+  }
+  nav.tabs{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  nav.tabs button{
+    text-align:left;
+    background:none;
+    border:none;
+    border-left:3px solid transparent;
+    padding:9px 10px;
+    font-family:inherit;
+    font-size:14px;
+    color:var(--ink-soft);
+    cursor:pointer;
+    border-radius:0 6px 6px 0;
+  }
+  nav.tabs button:hover{background:rgba(46,74,61,.06); color:var(--ink);}
+  nav.tabs button.active{
+    border-left:3px solid var(--pine);
+    background:rgba(46,74,61,.08);
+    color:var(--pine-dark);
+    font-weight:600;
+  }
+  nav.tabs button:disabled{opacity:.35; cursor:not-allowed;}
+  main{min-width:0;}
+  .card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px;
+    box-shadow:var(--shadow);
+  }
+  .card + .card{margin-top:16px;}
+  textarea, input[type=text], input[type=date]{
+    width:100%;
+    font-family:inherit;
+    font-size:14px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:10px 12px;
+    background:var(--field-bg);
+    color:var(--ink);
+    resize:vertical;
+  }
+  textarea{min-height:220px;}
+  label{font-size:13px; font-weight:600; color:var(--ink-soft); display:block; margin-bottom:6px;}
+  .field{margin-bottom:16px;}
+  .row{display:flex; gap:14px; flex-wrap:wrap;}
+  .row > .field{flex:1; min-width:180px;}
+  button.primary{
+    background:var(--pine);
+    color:#fff;
+    border:none;
+    padding:11px 20px;
+    border-radius:8px;
+    font-family:inherit;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  button.primary:hover{background:var(--pine-dark);}
+  button.primary:disabled{opacity:.5; cursor:not-allowed;}
+  button.ghost{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--ink);
+    padding:9px 16px;
+    border-radius:8px;
+    font-family:inherit;
+    font-size:14px;
+    cursor:pointer;
+  }
+  button.ghost:hover{border-color:var(--ink);}
+  .modegrid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:12px;
+    margin-top:18px;
+  }
+  .modebtn{
+    text-align:left;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+    cursor:pointer;
+    box-shadow:var(--shadow);
+  }
+  .modebtn:hover{border-color:var(--pine);}
+  .modebtn .k{font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ochre); font-weight:700;}
+  .modebtn .t{font-family:'Source Serif 4',serif; font-size:17px; margin-top:4px;}
+  .modebtn .d{font-size:12.5px; color:var(--ink-soft); margin-top:4px;}
+  .loading{
+    display:flex; align-items:center; gap:10px; color:var(--ink-soft); font-size:14px; padding:30px 0;
+  }
+  .spinner{
+    width:16px;height:16px;border-radius:50%;
+    border:2px solid var(--line); border-top-color:var(--pine);
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;}
+  .topbar h2{margin:0; font-size:20px;}
+  .muted{color:var(--ink-soft); font-size:13px;}
+  /* Resumen */
+  .tema{margin-bottom:18px;}
+  .tema h3{font-size:16px; margin:0 0 8px; color:var(--pine-dark);}
+  .tema ul{margin:0; padding-left:20px;}
+  .tema li{margin-bottom:4px;}
+  /* Quiz */
+  .qcount{font-size:13px; color:var(--ink-soft); margin-bottom:4px;}
+  .qprogressbar{height:5px; background:var(--line); border-radius:4px; overflow:hidden; margin-bottom:20px;}
+  .qprogressbar > div{height:100%; background:var(--pine);}
+  .qtext{font-family:'Source Serif 4',serif; font-size:19px; margin:0 0 16px;}
+  .options{display:flex; flex-direction:column; gap:8px;}
+  .opt{
+    text-align:left; border:1px solid var(--line); border-radius:8px; padding:11px 14px;
+    background:var(--field-bg); cursor:pointer; font-family:inherit; font-size:14.5px;
+  }
+  .opt:hover{border-color:var(--pine);}
+  .opt.correct{border-color:var(--right); background:#EAF6EE; color:var(--right); font-weight:600;}
+  .opt.wrong{border-color:var(--wrong); background:#FBEAE8; color:var(--wrong); font-weight:600;}
+  .opt:disabled{cursor:default;}
+  .explain{margin-top:14px; padding:12px 14px; background:var(--ochre-light); border-radius:8px; font-size:13.5px;}
+  .vf-btns{display:flex; gap:10px;}
+  .vf-btns button{flex:1; padding:14px; font-size:15px; font-weight:600; border-radius:8px; border:1px solid var(--line); background:var(--field-bg); cursor:pointer; font-family:inherit;}
+  /* Flashcards */
+  .flashwrap{display:flex; flex-direction:column; align-items:center;}
+  .flashcard{
+    width:100%; max-width:480px; min-height:220px; perspective:1200px; margin-bottom:18px; cursor:pointer;
+  }
+  .flashinner{
+    position:relative; width:100%; height:220px; text-align:center;
+    transition:transform .45s; transform-style:preserve-3d;
+  }
+  .flashcard.flipped .flashinner{transform:rotateY(180deg);}
+  .flashface{
+    position:absolute; width:100%; height:100%; backface-visibility:hidden;
+    border:1px solid var(--line); border-radius:14px; display:flex; align-items:center; justify-content:center;
+    padding:24px; font-family:'Source Serif 4',serif; font-size:18px; box-shadow:var(--shadow);
+  }
+  .flashfront{background:var(--paper);}
+  .flashback{background:var(--pine); color:#fff; transform:rotateY(180deg);}
+  .flashnav{display:flex; gap:10px; align-items:center;}
+  /* Exam */
+  .examitem{border-bottom:1px solid var(--line); padding:18px 0;}
+  .examitem:last-child{border-bottom:none;}
+  .examitem .qn{font-size:12px; color:var(--ochre); font-weight:700; text-transform:uppercase; letter-spacing:.03em;}
+  .examitem .qt{font-family:'Source Serif 4',serif; font-size:16.5px; margin:6px 0 10px;}
+  .examopt{display:block; width:100%; text-align:left; border:1px solid var(--line); border-radius:8px; padding:9px 12px; margin-bottom:6px; background:var(--field-bg); cursor:pointer; font-family:inherit; font-size:14px;}
+  .examopt.selected{border-color:var(--pine); background:#EAF1ED;}
+  .examresult{margin-top:20px; padding:20px; background:var(--ochre-light); border-radius:10px;}
+  .examresult .score{font-family:'Source Serif 4',serif; font-size:32px; font-weight:700; color:var(--pine-dark);}
+  /* Chat */
+  .chatlog{display:flex; flex-direction:column; gap:12px; max-height:440px; overflow-y:auto; padding:4px 2px 14px;}
+  .msg{padding:10px 14px; border-radius:10px; font-size:14.5px; max-width:85%;}
+  .msg.user{align-self:flex-end; background:var(--pine); color:#fff;}
+  .msg.bot{align-self:flex-start; background:#F1EEE3; border:1px solid var(--line);}
+  .chatinputrow{display:flex; gap:10px; margin-top:12px;}
+  .chatinputrow input{flex:1;}
+  /* Progreso */
+  .progrow{display:flex; align-items:center; gap:14px; padding:10px 0; border-bottom:1px solid var(--line);}
+  .progrow:last-child{border-bottom:none;}
+  .progname{width:170px; font-weight:600; font-size:14px; flex-shrink:0;}
+  .progbar{flex:1; height:10px; background:var(--line); border-radius:6px; overflow:hidden;}
+  .progbar > div{height:100%; background:var(--pine);}
+  .progpct{width:44px; text-align:right; font-size:13px; color:var(--ink-soft);}
+  .empty{color:var(--ink-soft); font-size:14px; padding:20px 0;}
+  .error{background:#FBEAE8; border:1px solid var(--wrong); color:var(--wrong); padding:12px 14px; border-radius:8px; font-size:13.5px; margin-bottom:14px;}
+  .uploadbox{
+    display:flex; align-items:center; gap:14px;
+    border:1.5px dashed var(--pine); border-radius:10px;
+    background:var(--field-bg); padding:18px 16px; cursor:pointer;
+  }
+  .uploadbox:hover{background:var(--ochre-light);}
+  .uploadicon{
+    width:38px; height:38px; border-radius:50%; background:var(--pine); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;
+  }
+  .filelist{display:flex; flex-direction:column; gap:6px; margin-top:10px;}
+  .filechip{
+    font-size:13px; background:var(--field-bg); border:1px solid var(--line);
+    border-radius:6px; padding:7px 10px;
+  }
+  .linklike{
+    background:none; border:none; color:var(--pine); font-family:inherit; font-size:12.5px;
+    cursor:pointer; text-decoration:underline; padding:0;
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<script type="text/babel" data-presets="react">
+const {useState, useEffect, useRef} = React;
+
+async function askClaude(systemPrompt, userPrompt, maxTokens=2000){
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      model:"claude-sonnet-4-6",
+      max_tokens: maxTokens,
+      system: systemPrompt,
+      messages:[{role:"user", content:userPrompt}]
+    })
+  });
+  if(!res.ok) throw new Error("Error de red al consultar la IA");
+  const data = await res.json();
+  const textBlock = (data.content||[]).find(b=>b.type==="text");
+  if(!textBlock) throw new Error("La IA no devolvió texto");
+  return textBlock.text;
+}
+
+function extractJSON(raw){
+  let t = raw.trim();
+  t = t.replace(/^```json/i,"").replace(/^```/,"").replace(/```$/,"").trim();
+  const start = t.indexOf("[") === -1 ? t.indexOf("{") : (t.indexOf("{") === -1 ? t.indexOf("[") : Math.min(t.indexOf("{"), t.indexOf("[")));
+  const lastCurly = t.lastIndexOf("}");
+  const lastSquare = t.lastIndexOf("]");
+  const end = Math.max(lastCurly, lastSquare);
+  if(start >= 0 && end > start){ t = t.slice(start, end+1); }
+  return JSON.parse(t);
+}
+
+function readTextFile(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("No se pudo leer " + file.name));
+    reader.readAsText(file);
+  });
+}
+
+async function readPptxFile(file){
+  const zip = await JSZip.loadAsync(file);
+  const slideFiles = Object.keys(zip.files)
+    .filter(name => /^ppt\/slides\/slide\d+\.xml$/.test(name))
+    .sort((a,b)=>{
+      const na = parseInt(a.match(/slide(\d+)\.xml/)[1],10);
+      const nb = parseInt(b.match(/slide(\d+)\.xml/)[1],10);
+      return na - nb;
+    });
+  if(slideFiles.length===0) throw new Error("No se encontraron diapositivas en " + file.name);
+  const parser = new DOMParser();
+  const slideTexts = [];
+  for(let i=0;i<slideFiles.length;i++){
+    const xml = await zip.files[slideFiles[i]].async("text");
+    const doc = parser.parseFromString(xml, "application/xml");
+    const nodes = doc.getElementsByTagName("a:t");
+    const lines = [];
+    for(let j=0;j<nodes.length;j++){
+      const t = nodes[j].textContent.trim();
+      if(t) lines.push(t);
+    }
+    if(lines.length) slideTexts.push(`Diapositiva ${i+1}: ${lines.join(" · ")}`);
+  }
+  return slideTexts.join("\n");
+}
+
+async function extractFileText(file){
+  const name = file.name.toLowerCase();
+  if(name.endsWith(".pptx")) return await readPptxFile(file);
+  if(name.endsWith(".txt") || name.endsWith(".md") || name.endsWith(".csv")) return await readTextFile(file);
+  throw new Error(`Formato no soportado: ${file.name}. Usá .txt, .md o .pptx (para Word/.docx o .pdf, pegá el texto directamente).`);
+}
+
+function slugTopic(name){
+  return name.trim().toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9\-]/g,"").slice(0,60) || "tema-sin-nombre";
+}
+
+async function saveMastery(topicLabel, pct){
+  const key = "estudio-ia:mastery";
+  let store = {};
+  try{
+    const r = await window.storage.get(key);
+    if(r && r.value) store = JSON.parse(r.value);
+  }catch(e){}
+  const slug = slugTopic(topicLabel);
+  const prev = store[slug];
+  const attempts = prev ? [...prev.attempts, pct] : [pct];
+  const last5 = attempts.slice(-5);
+  const avg = Math.round(last5.reduce((a,b)=>a+b,0)/last5.length);
+  store[slug] = {label: topicLabel, attempts, dominio: avg};
+  await window.storage.set(key, JSON.stringify(store));
+  return store;
+}
+
+async function loadMastery(){
+  try{
+    const r = await window.storage.get("estudio-ia:mastery");
+    if(r && r.value) return JSON.parse(r.value);
+  }catch(e){}
+  return {};
+}
+
+function Loading({label}){
+  return <div className="loading"><div className="spinner"></div>{label}</div>;
+}
+
+function ErrorBox({msg}){
+  if(!msg) return null;
+  return <div className="error">{msg}</div>;
+}
+
+// ---------- RESUMEN ----------
+function Resumen({material, topic}){
+  const [data,setData] = useState(null);
+  const [loading,setLoading] = useState(true);
+  const [err,setErr] = useState(null);
+
+  useEffect(()=>{
+    (async ()=>{
+      setLoading(true); setErr(null);
+      try{
+        const sys = "Sos un tutor que arma resúmenes de estudio en español rioplatense, claros y jerarquizados. Respondé SOLO con JSON válido, sin texto extra, con este formato exacto: {\"temas\":[{\"titulo\":\"...\",\"puntos\":[\"...\",\"...\"]}]}. Generá entre 3 y 6 temas, cada uno con 3 a 6 puntos clave concretos (no genéricos), basados estrictamente en el material dado.";
+        const raw = await askClaude(sys, `Material de estudio${topic?` (tema: ${topic})`:""}:\n\n${material}`, 2200);
+        setData(extractJSON(raw));
+      }catch(e){ setErr("No se pudo generar el resumen. Probá de nuevo."); }
+      setLoading(false);
+    })();
+  },[]);
+
+  if(loading) return <Loading label="Armando el resumen..." />;
+  if(err) return <ErrorBox msg={err} />;
+  return <div>
+    {data.temas.map((t,i)=>(
+      <div className="tema" key={i}>
+        <h3>{t.titulo}</h3>
+        <ul>{t.puntos.map((p,j)=><li key={j}>{p}</li>)}</ul>
+      </div>
+    ))}
+  </div>;
+}
+
+// ---------- CUESTIONARIO (MCQ) ----------
+function Cuestionario({material, topic, onFinish}){
+  const [qs,setQs] = useState(null);
+  const [loading,setLoading] = useState(true);
+  const [err,setErr] = useState(null);
+  const [idx,setIdx] = useState(0);
+  const [selected,setSelected] = useState(null);
+  const [correctCount,setCorrectCount] = useState(0);
+  const [done,setDone] = useState(false);
+
+  useEffect(()=>{
+    (async ()=>{
+      setLoading(true); setErr(null);
+      try{
+        const sys = "Sos un profesor que arma cuestionarios de opción múltiple en español rioplatense. Respondé SOLO con JSON válido: un array de 8 objetos con este formato exacto: {\"pregunta\":\"...\",\"opciones\":[\"...\",\"...\",\"...\",\"...\"],\"correcta\":0,\"explicacion\":\"...\"}. 'correcta' es el índice (0 a 3) de la opción correcta dentro de 'opciones'. Las preguntas deben ser específicas al material, no genéricas, y variar en dificultad.";
+        const raw = await askClaude(sys, `Material${topic?` (tema: ${topic})`:""}:\n\n${material}`, 2800);
+        setQs(extractJSON(raw));
+      }catch(e){ setErr("No se pudo generar el cuestionario. Probá de nuevo."); }
+      setLoading(false);
+    })();
+  },[]);
+
+  if(loading) return <Loading label="Preparando preguntas..." />;
+  if(err) return <ErrorBox msg={err} />;
+
+  if(done){
+    const pct = Math.round((correctCount/qs.length)*100);
+    return <div>
+      <div className="examresult">
+        <div className="muted">Resultado del cuestionario</div>
+        <div className="score">{correctCount} / {qs.length} ({pct}%)</div>
+      </div>
+    </div>;
+  }
+
+  const q = qs[idx];
+  function choose(i){
+    if(selected !== null) return;
+    setSelected(i);
+    if(i === q.correcta) setCorrectCount(c=>c+1);
+  }
+  function next(){
+    if(idx+1 < qs.length){ setIdx(idx+1); setSelected(null); }
+    else {
+      const finalCorrect = correctCount;
+      setDone(true);
+      onFinish(Math.round((finalCorrect/qs.length)*100));
+    }
+  }
+
+  return <div>
+    <div className="qcount">Pregunta {idx+1} de {qs.length}</div>
+    <div className="qprogressbar"><div style={{width:`${(idx/qs.length)*100}%`}}></div></div>
+    <p className="qtext">{q.pregunta}</p>
+    <div className="options">
+      {q.opciones.map((op,i)=>{
+        let cls="opt";
+        if(selected!==null){
+          if(i===q.correcta) cls+=" correct";
+          else if(i===selected) cls+=" wrong";
+        }
+        return <button key={i} className={cls} disabled={selected!==null} onClick={()=>choose(i)}>{op}</button>;
+      })}
+    </div>
+    {selected!==null && <>
+      <div className="explain">{q.explicacion}</div>
+      <div style={{marginTop:16}}><button className="primary" onClick={next}>{idx+1<qs.length ? "Siguiente" : "Ver resultado"}</button></div>
+    </>}
+  </div>;
+}
+
+// ---------- VERDADERO / FALSO ----------
+function VerdaderoFalso({material, topic, onFinish}){
+  const [qs,setQs] = useState(null);
+  const [loading,setLoading] = useState(true);
+  const [err,setErr] = useState(null);
+  const [idx,setIdx] = useState(0);
+  const [selected,setSelected] = useState(null);
+  const [correctCount,setCorrectCount] = useState(0);
+  const [done,setDone] = useState(false);
+
+  useEffect(()=>{
+    (async ()=>{
+      setLoading(true); setErr(null);
+      try{
+        const sys = "Sos un profesor que arma ejercicios de verdadero o falso en español rioplatense. Respondé SOLO con JSON válido: un array de 8 objetos con este formato exacto: {\"afirmacion\":\"...\",\"correcta\":true,\"explicacion\":\"...\"}. 'correcta' es true si la afirmación es verdadera, false si es falsa. Mezclá afirmaciones verdaderas y falsas (aprox. mitad y mitad), basadas estrictamente en el material.";
+        const raw = await askClaude(sys, `Material${topic?` (tema: ${topic})`:""}:\n\n${material}`, 2400);
+        setQs(extractJSON(raw));
+      }catch(e){ setErr("No se pudo generar el ejercicio. Probá de nuevo."); }
+      setLoading(false);
+    })();
+  },[]);
+
+  if(loading) return <Loading label="Preparando afirmaciones..." />;
+  if(err) return <ErrorBox msg={err} />;
+
+  if(done){
+    const pct = Math.round((correctCount/qs.length)*100);
+    return <div className="examresult">
+      <div className="muted">Resultado</div>
+      <div className="score">{correctCount} / {qs.length} ({pct}%)</div>
+    </div>;
+  }
+
+  const q = qs[idx];
+  function choose(val){
+    if(selected !== null) return;
+    setSelected(val);
+    if(val === q.correcta) setCorrectCount(c=>c+1);
+  }
+  function next(){
+    if(idx+1 < qs.length){ setIdx(idx+1); setSelected(null); }
+    else { setDone(true); onFinish(Math.round((correctCount/qs.length)*100)); }
+  }
+
+  return <div>
+    <div className="qcount">Afirmación {idx+1} de {qs.length}</div>
+    <div className="qprogressbar"><div style={{width:`${(idx/qs.length)*100}%`}}></div></div>
+    <p className="qtext">{q.afirmacion}</p>
+    <div className="vf-btns">
+      <button style={selected!==null ? {borderColor: q.correcta===true?"var(--right)":(selected===true?"var(--wrong)":"var(--line)"), background: q.correcta===true?"#EAF6EE":(selected===true?"#FBEAE8":"var(--field-bg)")} : {}} disabled={selected!==null} onClick={()=>choose(true)}>Verdadero</button>
+      <button style={selected!==null ? {borderColor: q.correcta===false?"var(--right)":(selected===false?"var(--wrong)":"var(--line)"), background: q.correcta===false?"#EAF6EE":(selected===false?"#FBEAE8":"var(--field-bg)")} : {}} disabled={selected!==null} onClick={()=>choose(false)}>Falso</button>
+    </div>
+    {selected!==null && <>
+      <div className="explain">{q.explicacion}</div>
+      <div style={{marginTop:16}}><button className="primary" onClick={next}>{idx+1<qs.length ? "Siguiente" : "Ver resultado"}</button></div>
+    </>}
+  </div>;
+}
+
+// ---------- TARJETAS ----------
+function Tarjetas({material, topic}){
+  const [cards,setCards] = useState(null);
+  const [loading,setLoading] = useState(true);
+  const [err,setErr] = useState(null);
+  const [idx,setIdx] = useState(0);
+  const [flipped,setFlipped] = useState(false);
+
+  useEffect(()=>{
+    (async ()=>{
+      setLoading(true); setErr(null);
+      try{
+        const sys = "Sos un tutor que arma tarjetas de memoria (flashcards) en español rioplatense. Respondé SOLO con JSON válido: un array de 12 objetos con este formato exacto: {\"frente\":\"término o pregunta corta\",\"dorso\":\"definición o respuesta concisa\"}. Basate estrictamente en el material.";
+        const raw = await askClaude(sys, `Material${topic?` (tema: ${topic})`:""}:\n\n${material}`, 2400);
+        setCards(extractJSON(raw));
+      }catch(e){ setErr("No se pudieron generar las tarjetas. Probá de nuevo."); }
+      setLoading(false);
+    })();
+  },[]);
+
+  if(loading) return <Loading label="Armando tarjetas..." />;
+  if(err) return <ErrorBox msg={err} />;
+
+  const c = cards[idx];
+  function toggle(){ setFlipped(f=>!f); }
+  function go(delta){
+    setFlipped(false);
+    setIdx(i => Math.max(0, Math.min(cards.length-1, i+delta)));
+  }
+
+  return <div className="flashwrap">
+    <div className="muted" style={{marginBottom:10}}>Tarjeta {idx+1} de {cards.length} — tocá para dar vuelta</div>
+    <div className={"flashcard" + (flipped?" flipped":"")} onClick={toggle}>
+      <div className="flashinner">
+        <div className="flashface flashfront">{c.frente}</div>
+        <div className="flashface flashback">{c.dorso}</div>
+      </div>
+    </div>
+    <div className="flashnav">
+      <button className="ghost" onClick={(e)=>{e.stopPropagation(); go(-1);}} disabled={idx===0}>← Anterior</button>
+      <button className="ghost" onClick={(e)=>{e.stopPropagation(); go(1);}} disabled={idx===cards.length-1}>Siguiente →</button>
+    </div>
+  </div>;
+}
+
+// ---------- EXAMEN SIMULADO ----------
+function ExamenSimulado({material, topic, onFinish}){
+  const [qs,setQs] = useState(null);
+  const [loading,setLoading] = useState(true);
+  const [err,setErr] = useState(null);
+  const [answers,setAnswers] = useState({});
+  const [submitted,setSubmitted] = useState(false);
+
+  useEffect(()=>{
+    (async ()=>{
+      setLoading(true); setErr(null);
+      try{
+        const sys = "Sos un profesor armando un examen simulado en español rioplatense, mezclando dos tipos de pregunta. Respondé SOLO con JSON válido: un array de 10 objetos. 6 deben tener \"tipo\":\"mcq\" con formato {\"tipo\":\"mcq\",\"pregunta\":\"...\",\"opciones\":[\"...\",\"...\",\"...\",\"...\"],\"correcta\":0,\"explicacion\":\"...\"} donde 'correcta' es el índice de la opción correcta. Los otros 4 deben tener \"tipo\":\"vf\" con formato {\"tipo\":\"vf\",\"pregunta\":\"afirmación\",\"correcta\":true,\"explicacion\":\"...\"}. Mezclá el orden de los 10. Basate estrictamente en el material, cubriendo distintos subtemas.";
+        const raw = await askClaude(sys, `Material${topic?` (tema: ${topic})`:""}:\n\n${material}`, 3200);
+        setQs(extractJSON(raw));
+      }catch(e){ setErr("No se pudo generar el examen. Probá de nuevo."); }
+      setLoading(false);
+    })();
+  },[]);
+
+  if(loading) return <Loading label="Armando el examen simulado..." />;
+  if(err) return <ErrorBox msg={err} />;
+
+  function selectMCQ(qi, oi){
+    if(submitted) return;
+    setAnswers(a=>({...a, [qi]: oi}));
+  }
+  function selectVF(qi, val){
+    if(submitted) return;
+    setAnswers(a=>({...a, [qi]: val}));
+  }
+  function submit(){
+    let correct = 0;
+    qs.forEach((q,i)=>{ if(answers[i] === q.correcta) correct++; });
+    setSubmitted(true);
+    onFinish(Math.round((correct/qs.length)*100));
+  }
+  const answeredCount = Object.keys(answers).length;
+  const correctTotal = submitted ? qs.filter((q,i)=>answers[i]===q.correcta).length : 0;
+
+  return <div>
+    {!submitted && <div className="muted" style={{marginBottom:14}}>{answeredCount} / {qs.length} respondidas</div>}
+    {qs.map((q,i)=>(
+      <div className="examitem" key={i}>
+        <div className="qn">Pregunta {i+1} — {q.tipo==="mcq"?"Opción múltiple":"Verdadero o falso"}</div>
+        <div className="qt">{q.pregunta}</div>
+        {q.tipo==="mcq" ? (
+          <div>
+            {q.opciones.map((op,oi)=>{
+              let cls="examopt";
+              if(submitted){
+                if(oi===q.correcta) cls+=" selected";
+              } else if(answers[i]===oi) cls+=" selected";
+              return <button key={oi} className={cls} onClick={()=>selectMCQ(i,oi)} disabled={submitted}
+                style={submitted && oi===q.correcta ? {borderColor:"var(--right)", background:"#EAF6EE"} : (submitted && answers[i]===oi && oi!==q.correcta ? {borderColor:"var(--wrong)", background:"#FBEAE8"} : {})}>{op}</button>;
+            })}
+          </div>
+        ) : (
+          <div className="vf-btns">
+            <button className={answers[i]===true?"selected":""} style={{padding:"9px 14px", border:"1px solid var(--line)", borderRadius:8, background:"var(--field-bg)", cursor:submitted?"default":"pointer", ...(submitted && q.correcta===true ? {borderColor:"var(--right)", background:"#EAF6EE"} : (submitted && answers[i]===true ? {borderColor:"var(--wrong)", background:"#FBEAE8"} : (answers[i]===true?{borderColor:"var(--pine)"}:{})))}} onClick={()=>selectVF(i,true)} disabled={submitted}>Verdadero</button>
+            <button style={{padding:"9px 14px", border:"1px solid var(--line)", borderRadius:8, background:"var(--field-bg)", cursor:submitted?"default":"pointer", ...(submitted && q.correcta===false ? {borderColor:"var(--right)", background:"#EAF6EE"} : (submitted && answers[i]===false ? {borderColor:"var(--wrong)", background:"#FBEAE8"} : (answers[i]===false?{borderColor:"var(--pine)"}:{})))}} onClick={()=>selectVF(i,false)} disabled={submitted}>Falso</button>
+          </div>
+        )}
+        {submitted && <div className="explain">{q.explicacion}</div>}
+      </div>
+    ))}
+    {!submitted ? (
+      <div style={{marginTop:18}}>
+        <button className="primary" onClick={submit} disabled={answeredCount<qs.length}>Corregir examen</button>
+        {answeredCount<qs.length && <div className="muted" style={{marginTop:8}}>Respondé todas las preguntas para corregir.</div>}
+      </div>
+    ) : (
+      <div className="examresult">
+        <div className="muted">Resultado del examen simulado</div>
+        <div className="score">{correctTotal} / {qs.length} ({Math.round((correctTotal/qs.length)*100)}%)</div>
+      </div>
+    )}
+  </div>;
+}
+
+// ---------- TUTOR CHAT ----------
+function Tutor({material, topic}){
+  const [msgs,setMsgs] = useState([{role:"bot", text:`Contame qué parte de ${topic || "esto"} te genera dudas y lo vemos paso a paso.`}]);
+  const [input,setInput] = useState("");
+  const [busy,setBusy] = useState(false);
+  const logRef = useRef(null);
+
+  useEffect(()=>{ if(logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight; },[msgs]);
+
+  async function send(){
+    const text = input.trim();
+    if(!text || busy) return;
+    setInput("");
+    const newMsgs = [...msgs, {role:"user", text}];
+    setMsgs(newMsgs);
+    setBusy(true);
+    try{
+      const sys = `Sos un tutor paciente que explica paso a paso en español rioplatense, usando SOLO el siguiente material de estudio como base (y conocimiento general para aclarar si hace falta). No inventes datos que contradigan el material. Material de estudio:\n\n${material}`;
+      const history = newMsgs.map(m=> (m.role==="user"?"Alumno: ":"Tutor: ") + m.text).join("\n");
+      const raw = await askClaude(sys, history + "\nTutor:", 1200);
+      setMsgs(m=>[...m, {role:"bot", text: raw.trim()}]);
+    }catch(e){
+      setMsgs(m=>[...m, {role:"bot", text:"Se me cortó la conexión. Probá de nuevo."}]);
+    }
+    setBusy(false);
+  }
+
+  return <div>
+    <div className="chatlog" ref={logRef}>
+      {msgs.map((m,i)=><div key={i} className={"msg "+(m.role==="user"?"user":"bot")}>{m.text}</div>)}
+      {busy && <div className="msg bot">Pensando...</div>}
+    </div>
+    <div className="chatinputrow">
+      <input type="text" placeholder="Preguntá lo que sea sobre el material..." value={input}
+        onChange={e=>setInput(e.target.value)}
+        onKeyDown={e=>{ if(e.key==="Enter") send(); }} />
+      <button className="primary" onClick={send} disabled={busy}>Enviar</button>
+    </div>
+  </div>;
+}
+
+// ---------- PROGRESO ----------
+function Progreso(){
+  const [store,setStore] = useState(null);
+  useEffect(()=>{ loadMastery().then(setStore); },[]);
+  if(!store) return <Loading label="Cargando progreso..." />;
+  const entries = Object.values(store).sort((a,b)=> (b.attempts.length - a.attempts.length));
+  if(entries.length===0) return <div className="empty">Todavía no hay resultados guardados. Hacé un cuestionario, un examen simulado o un ejercicio de verdadero/falso para empezar a ver tu dominio por tema.</div>;
+  return <div>
+    {entries.map((e,i)=>(
+      <div className="progrow" key={i}>
+        <div className="progname">{e.label}</div>
+        <div className="progbar"><div style={{width:`${e.dominio}%`}}></div></div>
+        <div className="progpct">{e.dominio}%</div>
+      </div>
+    ))}
+  </div>;
+}
+
+// ---------- APP ----------
+const MODES = [
+  {id:"resumen", k:"Paso 1", t:"Resumen del tema", d:"Ideas clave organizadas, para repasar rápido."},
+  {id:"cuestionario", k:"Paso 2", t:"Cuestionario", d:"8 preguntas de opción múltiple, con corrección."},
+  {id:"vf", k:"Paso 3", t:"Verdadero o falso", d:"8 afirmaciones para poner a prueba lo que sabés."},
+  {id:"tarjetas", k:"Paso 4", t:"Tarjetas de memoria", d:"12 tarjetas para repaso rápido."},
+  {id:"examen", k:"Paso 5", t:"Examen simulado", d:"10 preguntas mixtas, corregido al final."},
+  {id:"tutor", k:"Cuando quieras", t:"Tutor de dudas", d:"Preguntale lo que no te cierra."},
+];
+
+function App(){
+  const [material,setMaterial] = useState("");
+  const [topic,setTopic] = useState("");
+  const [confirmedMaterial,setConfirmedMaterial] = useState(null);
+  const [confirmedTopic,setConfirmedTopic] = useState("");
+  const [mode,setMode] = useState(null);
+  const [tab,setTab] = useState("material");
+  const [loadedFiles,setLoadedFiles] = useState([]);
+  const [fileError,setFileError] = useState(null);
+  const [filesLoading,setFilesLoading] = useState(false);
+  const fileInputRef = useRef(null);
+
+  async function handleFiles(fileList){
+    const files = Array.from(fileList);
+    if(files.length===0) return;
+    setFilesLoading(true);
+    setFileError(null);
+    const added = [];
+    for(const f of files){
+      try{
+        const text = await extractFileText(f);
+        added.push({name:f.name, chars:text.length});
+        setMaterial(m => (m.trim() ? m.trim() + `\n\n--- ${f.name} ---\n` : `--- ${f.name} ---\n`) + text);
+      }catch(e){
+        setFileError(e.message || `No se pudo procesar ${f.name}`);
+      }
+    }
+    setLoadedFiles(lf => [...lf, ...added]);
+    setFilesLoading(false);
+    if(fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function clearMaterial(){
+    setMaterial("");
+    setLoadedFiles([]);
+    setFileError(null);
+  }
+
+  function startStudying(){
+    if(material.trim().length < 40) return;
+    setConfirmedMaterial(material.trim());
+    setConfirmedTopic(topic.trim());
+    setTab("modos");
+  }
+
+  function openMode(id){ setMode(id); setTab(id); }
+
+  async function handleFinish(pct){
+    await saveMastery(confirmedTopic || "Tema sin nombre", pct);
+  }
+
+  const hasMaterial = !!confirmedMaterial;
+
+  return <div className="app">
+    <header className="top">
+      <h1>Cuaderno IA</h1>
+      <div className="tag">tu material, convertido en estudio</div>
+    </header>
+    <div className="layout">
+      <nav className="tabs">
+        <button className={tab==="material"?"active":""} onClick={()=>setTab("material")}>Material</button>
+        <button className={tab==="modos"?"active":""} onClick={()=>setTab("modos")} disabled={!hasMaterial}>Modos de estudio</button>
+        <button className={tab==="resumen"?"active":""} onClick={()=>openMode("resumen")} disabled={!hasMaterial}>Resumen</button>
+        <button className={tab==="cuestionario"?"active":""} onClick={()=>openMode("cuestionario")} disabled={!hasMaterial}>Cuestionario</button>
+        <button className={tab==="vf"?"active":""} onClick={()=>openMode("vf")} disabled={!hasMaterial}>Verdadero/Falso</button>
+        <button className={tab==="tarjetas"?"active":""} onClick={()=>openMode("tarjetas")} disabled={!hasMaterial}>Tarjetas</button>
+        <button className={tab==="examen"?"active":""} onClick={()=>openMode("examen")} disabled={!hasMaterial}>Examen simulado</button>
+        <button className={tab==="tutor"?"active":""} onClick={()=>openMode("tutor")} disabled={!hasMaterial}>Tutor</button>
+        <button className={tab==="progreso"?"active":""} onClick={()=>setTab("progreso")}>Mi progreso</button>
+      </nav>
+      <main>
+        {tab==="material" && (
+          <div className="card">
+            <div className="topbar"><h2>Pegá tu material de estudio</h2></div>
+            <div className="row">
+              <div className="field">
+                <label>Tema o materia (opcional)</label>
+                <input type="text" placeholder="Ej: Didáctica General — Camilloni" value={topic} onChange={e=>setTopic(e.target.value)} />
+              </div>
+            </div>
+            <div className="field">
+              <label>Subir archivos (.txt, .md, .pptx) — podés elegir varios</label>
+              <div className="uploadbox" onClick={()=>fileInputRef.current && fileInputRef.current.click()}>
+                <input ref={fileInputRef} type="file" accept=".txt,.md,.csv,.pptx" multiple style={{display:"none"}} onChange={e=>handleFiles(e.target.files)} />
+                <div className="uploadicon">⇪</div>
+                <div>
+                  <div style={{fontWeight:600}}>Hacé clic para elegir archivos</div>
+                  <div className="muted">Apuntes en .txt/.md o presentaciones .pptx — el texto se extrae y se agrega abajo</div>
+                </div>
+              </div>
+              {filesLoading && <div className="loading" style={{padding:"10px 0"}}><div className="spinner"></div>Leyendo archivo...</div>}
+              <ErrorBox msg={fileError} />
+              {loadedFiles.length>0 && (
+                <div className="filelist">
+                  {loadedFiles.map((f,i)=>(
+                    <div className="filechip" key={i}>📄 {f.name} <span className="muted">· {f.chars.toLocaleString("es-AR")} caracteres</span></div>
+                  ))}
+                </div>
+              )}
+              <div className="muted" style={{marginTop:6}}>Para Word (.docx) o PDF, por ahora abrí el archivo y pegá el texto en el cuadro de abajo.</div>
+            </div>
+            <div className="field">
+              <div style={{display:"flex", justifyContent:"space-between", alignItems:"baseline"}}>
+                <label style={{marginBottom:0}}>Apuntes, resumen o texto a estudiar</label>
+                {material.length>0 && <button className="linklike" onClick={clearMaterial}>Vaciar todo</button>}
+              </div>
+              <textarea placeholder="Pegá acá tus apuntes, el texto de la cátedra, tus notas de clase o lo que quieras estudiar... (también podés subir archivos arriba y se agregan acá)" value={material} onChange={e=>setMaterial(e.target.value)} style={{marginTop:8}} />
+              <div className="muted" style={{marginTop:4}}>{material.trim().length.toLocaleString("es-AR")} caracteres cargados</div>
+            </div>
+            <button className="primary" onClick={startStudying} disabled={material.trim().length<40}>Generar plan de estudio</button>
+            {material.trim().length>0 && material.trim().length<40 && <div className="muted" style={{marginTop:8}}>Pegá o subí un poco más de contenido para que la IA tenga con qué trabajar.</div>}
+          </div>
+        )}
+
+        {tab==="modos" && hasMaterial && (
+          <div>
+            <div className="card">
+              <div className="topbar">
+                <h2>{confirmedTopic || "Tu material"}</h2>
+                <button className="ghost" onClick={()=>setTab("material")}>Cambiar material</button>
+              </div>
+              <div className="muted">Elegí cómo querés estudiarlo. Cada modo genera contenido nuevo a partir de lo que pegaste.</div>
+            </div>
+            <div className="modegrid">
+              {MODES.map(m=>(
+                <button className="modebtn" key={m.id} onClick={()=>openMode(m.id)}>
+                  <div className="k">{m.k}</div>
+                  <div className="t">{m.t}</div>
+                  <div className="d">{m.d}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {hasMaterial && tab==="resumen" && (
+          <div className="card">
+            <div className="topbar"><h2>Resumen</h2><button className="ghost" onClick={()=>setTab("modos")}>← Modos</button></div>
+            <Resumen key={confirmedMaterial+"-resumen"} material={confirmedMaterial} topic={confirmedTopic} />
+          </div>
+        )}
+        {hasMaterial && tab==="cuestionario" && (
+          <div className="card">
+            <div className="topbar"><h2>Cuestionario</h2><button className="ghost" onClick={()=>setTab("modos")}>← Modos</button></div>
+            <Cuestionario key={confirmedMaterial+"-cuestionario"} material={confirmedMaterial} topic={confirmedTopic} onFinish={handleFinish} />
+          </div>
+        )}
+        {hasMaterial && tab==="vf" && (
+          <div className="card">
+            <div className="topbar"><h2>Verdadero o falso</h2><button className="ghost" onClick={()=>setTab("modos")}>← Modos</button></div>
+            <VerdaderoFalso key={confirmedMaterial+"-vf"} material={confirmedMaterial} topic={confirmedTopic} onFinish={handleFinish} />
+          </div>
+        )}
+        {hasMaterial && tab==="tarjetas" && (
+          <div className="card">
+            <div className="topbar"><h2>Tarjetas de memoria</h2><button className="ghost" onClick={()=>setTab("modos")}>← Modos</button></div>
+            <Tarjetas key={confirmedMaterial+"-tarjetas"} material={confirmedMaterial} topic={confirmedTopic} />
+          </div>
+        )}
+        {hasMaterial && tab==="examen" && (
+          <div className="card">
+            <div className="topbar"><h2>Examen simulado</h2><button className="ghost" onClick={()=>setTab("modos")}>← Modos</button></div>
+            <ExamenSimulado key={confirmedMaterial+"-examen"} material={confirmedMaterial} topic={confirmedTopic} onFinish={handleFinish} />
+          </div>
+        )}
+        {hasMaterial && tab==="tutor" && (
+          <div className="card">
+            <div className="topbar"><h2>Tutor de dudas</h2><button className="ghost" onClick={()=>setTab("modos")}>← Modos</button></div>
+            <Tutor key={confirmedMaterial+"-tutor"} material={confirmedMaterial} topic={confirmedTopic} />
+          </div>
+        )}
+        {tab==="progreso" && (
+          <div className="card">
+            <div className="topbar"><h2>Mi progreso</h2></div>
+            <Progreso />
+          </div>
+        )}
+      </main>
+    </div>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
